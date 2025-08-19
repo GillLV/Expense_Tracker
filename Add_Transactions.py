@@ -18,8 +18,6 @@ try:
 
     cur = conn.cursor()
 
-    config.read('Configurations/csv_configuration.ini')
-
     # Open the csv in pandas
     df = pd.read_csv(config['csv_files']['original_path'], header=None)
 
