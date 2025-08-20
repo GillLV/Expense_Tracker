@@ -4,22 +4,33 @@ import pandas as pd
 import configparser
 
 
-try:
+try:        
     
     config = configparser.ConfigParser()
-    config.read('Configurations/transaction_config.ini')
+    config.read('Configurations/database_config.ini')
+
+    host = config['connection']['hostname']
+    dbname = config['connection']['database']
+    user = config['connection']['username']
+    password = config['connection']['pwd']
+    port = config['connection']['port']
+    table_name = config['connection']['table_name']
 
     # Open a connection to the PostgreSQL database
-    conn = psycopg2.connect(host=config['connection']['hostname'],
-                            dbname=config['connection']['database'],
-                            user=config['connection']['username'],
-                            password=config['connection']['pwd'],
-                            port=config['connection']['port'])
+    conn = psycopg2.connect(host=host,
+                            dbname=dbname,
+                            user=user,
+                            password=password,
+                            port=port)
 
     cur = conn.cursor()
 
+    config.read('Configurations/csv_config.ini')
+    input_path = config['csv_files']['input_path']
+    processed_path = config['csv_files']['processed_path']
+
     # Open the csv in pandas
-    df = pd.read_csv(config['csv_files']['original_path'], header=None)
+    df = pd.read_csv(input_path, header=None)
 
     print(df)
 
@@ -38,19 +49,21 @@ try:
     df.iloc[:,3] = df.iloc[:,3].apply(replace_empty_with_zeros)
 
     # Save the modified DataFrame to the original CSV file
-    df.to_csv(config['csv_files']['processed_path'], index=False, header=False)
+    df.to_csv(processed_path, index=False, header=False)
 
     csv_data: StringIO
 
-    csv_path = config['csv_files']['processed_path']
+    csv_path = processed_path
     with open(csv_path, 'r') as f:
         csv_data = f.read()
 
     csv = StringIO(csv_data)
 
+    config.read('Configurations/database_config.ini')
+
     # Copy the csv file to our PostgreSQL table
-    cur.copy_from(csv, 'transaction', sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))
-   
+    cur.copy_from(csv, table_name, sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))
+
     conn.commit()
 
 # Catch errors and close connection
