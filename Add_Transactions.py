@@ -37,8 +37,11 @@ try:
     # Vectorized functions to format table to make it compatible of PostgresSql
     def format_date(x):
         dates = x.split('/')
+        if len(dates) != 3:
+            return x
         return f"{dates[2]}-{dates[0]}-{dates[1]}"
     
+
     def replace_empty_with_zeros(x):
         if pd.isna(x):
             return 0
