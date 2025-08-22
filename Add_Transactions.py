@@ -38,7 +38,11 @@ try:
     def format_date(x):
         dates = x.split('/')
         if len(dates) != 3:
-            return x
+            dates = x.split('-')
+            if len(dates) != 3:
+                raise ValueError("Date format not accepted")
+            else:
+                return x
         return f"{dates[2]}-{dates[0]}-{dates[1]}"
     
 
