@@ -27,7 +27,7 @@ try:
 
     config.read('Configurations/csv_config.ini')
     input_path = config['csv_files']['input_path']
-    processed_path = config['csv_files']['processed_path']
+    processed_path = config['csv_files']['processed_directory']
 
     # Open the csv in pandas
     df = pd.read_csv(input_path, header=None)
