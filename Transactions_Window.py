@@ -36,12 +36,12 @@ class TransactionsWindow:
 
         config = configparser.ConfigParser()
         config.read('Configurations/database_config.ini')
-        self.host = config['connection']['hostname']
-        self.dbname = config['connection']['database']
-        self.user = config['connection']['username']
-        self.password = config['connection']['pwd']
-        self.port = config['connection']['port']
-        self.table_name = config['connection']['table_name']
+        self.host = config['app_connection']['app_hostname']
+        self.dbname = config['app_connection']['app_database']
+        self.user = config['app_connection']['app_username']
+        self.password = config['app_connection']['app_pwd']
+        self.port = config['app_connection']['app_port']
+        self.table_name = config['app_connection']['app_table']
 
     def get_num_days_in_month(self):
         days = 31
