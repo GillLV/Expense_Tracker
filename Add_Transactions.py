@@ -9,12 +9,12 @@ try:
     config = configparser.ConfigParser()
     config.read('Configurations/database_config.ini')
 
-    host = config['connection']['hostname']
-    dbname = config['connection']['database']
-    user = config['connection']['username']
-    password = config['connection']['pwd']
-    port = config['connection']['port']
-    table_name = config['connection']['table_name']
+    host = config['app_connection']['app_hostname']
+    dbname = config['app_connection']['app_database']
+    user = config['app_connection']['app_username']
+    password = config['app_connection']['app_pwd']
+    port = config['app_connection']['app_port']
+    table_name = config['app_connection']['app_table']
 
     # Open a connection to the PostgreSQL database
     conn = psycopg2.connect(host=host,
