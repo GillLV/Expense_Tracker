@@ -16,3 +16,10 @@ This application uses PostgreSQL to store transaction data. PostgreSQL can be do
   python setup_db.py
 ```
 in the project directory. 
+
+## CSV Setup
+This application does not yet support adding transaction data via the user interface. To add transaction data to the database, configure the `csv_config.ini` file. Set `input_path` to the path of the CSV you wish to add. Set `output_directory` to the directory you wish to save the processed CSV file to. Once settings are configured, run
+```
+  python Add_Transactions.py`
+```
+in the project directory.
