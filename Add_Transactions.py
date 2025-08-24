@@ -9,58 +9,74 @@ try:
     config = configparser.ConfigParser()
     config.read('Configurations/database_config.ini')
 
-    host = config['app_connection']['app_hostname']
-    dbname = config['app_connection']['app_database']
-    user = config['app_connection']['app_username']
-    password = config['app_connection']['app_pwd']
-    port = config['app_connection']['app_port']
-    table_name = config['app_connection']['app_table']
+    app_host_name = config['app_connection']['app_hostname']
+    app_database_name = config['app_connection']['app_database']
+    app_username = config['app_connection']['app_username']
+    app_password = config['app_connection']['app_pwd']
+    app_port = config['app_connection']['app_port']
+    app_table_name = config['app_connection']['app_table']
 
     # Open a connection to the PostgreSQL database
-    conn = psycopg2.connect(host=host,
-                            dbname=dbname,
-                            user=user,
-                            password=password,
-                            port=port)
+    conn = psycopg2.connect(host=app_host_name,
+                            dbname=app_database_name,
+                            user=app_username,
+                            password=app_password,
+                            port=app_port)
 
     cur = conn.cursor()
 
     config.read('Configurations/csv_config.ini')
-    input_path = config['csv_files']['input_path']
-    processed_path = config['csv_files']['processed_directory']
+    csv_input_path = config['csv_files']['input_path']
+    csv_processed_directory = config['csv_files']['processed_directory']
 
     # Open the csv in pandas
-    df = pd.read_csv(input_path, header=None)
+    df = pd.read_csv(csv_input_path, header=None)
 
     print(df)
 
+    def is_US_format(split_list):
+        if len(split_list) != 3:
+            return False
+        elif len(split_list[0]) != 2 or len(split_list[1]) != 2 or len(split_list[2]) != 4:
+            return False
+        elif int(split_list[0]) > 12:
+            return False
+        return True
+
+    def is_ISO_format(split_list):
+        if len(split_list) != 3:
+            return False
+        elif len(split_list[0]) != 4 or len(split_list[1]) != 2 or len(split_list[2]) != 2:
+            return False
+        elif int(split_list[1]) > 12:
+            return False
+        return True
+
     # Vectorized functions to format table to make it compatible of PostgresSql
-    def format_date(x):
-        dates = x.split('/')
-        if len(dates) != 3:
-            dates = x.split('-')
-            if len(dates) != 3:
-                raise ValueError("Date format not accepted")
-            else:
-                return x
-        return f"{dates[2]}-{dates[0]}-{dates[1]}"
-    
+    def format_date_US_to_ISO(date_str):
+        dates = date_str.split('/')
+        if is_US_format(dates):
+             return f"{dates[2]}-{dates[0]}-{dates[1]}"
+        dates = date_str.split('-')
+        if is_ISO_format(dates):
+            return date_str
+        raise ValueError("Date format not accepted")
 
     def replace_empty_with_zeros(x):
         if pd.isna(x):
             return 0
         return x
 
-    df.iloc[:,0] = df.iloc[:,0].apply(format_date)
+    df.iloc[:,0] = df.iloc[:,0].apply(format_date_US_to_ISO)
     df.iloc[:,2] = df.iloc[:,2].apply(replace_empty_with_zeros)
     df.iloc[:,3] = df.iloc[:,3].apply(replace_empty_with_zeros)
 
     # Save the modified DataFrame to the original CSV file
-    df.to_csv(processed_path, index=False, header=False)
+    df.to_csv(csv_processed_directory, index=False, header=False)
 
     csv_data: StringIO
 
-    csv_path = processed_path
+    csv_path = csv_processed_directory
     with open(csv_path, 'r') as f:
         csv_data = f.read()
 
@@ -69,7 +85,7 @@ try:
     config.read('Configurations/database_config.ini')
 
     # Copy the csv file to our PostgreSQL table
-    cur.copy_from(csv, table_name, sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))
+    cur.copy_from(csv, app_table_name, sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))
 
     conn.commit()
 
