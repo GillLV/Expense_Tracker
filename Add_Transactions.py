@@ -27,7 +27,7 @@ try:
 
     config.read('Configurations/csv_config.ini')
     csv_input_path = config['csv_files']['input_path']
-    csv_processed_directory = config['csv_files']['processed_directory']
+    csv_processed_path = config['csv_files']['processed_path']
 
     # Open the csv in pandas
     df = pd.read_csv(csv_input_path, header=None)
@@ -62,21 +62,21 @@ try:
             return date_str
         raise ValueError("Date format not accepted")
 
-    def replace_empty_with_zeros(x):
+    def replace_empty_col_with_zeros(x):
         if pd.isna(x):
             return 0
         return x
 
     df.iloc[:,0] = df.iloc[:,0].apply(format_date_US_to_ISO)
-    df.iloc[:,2] = df.iloc[:,2].apply(replace_empty_with_zeros)
-    df.iloc[:,3] = df.iloc[:,3].apply(replace_empty_with_zeros)
+    df.iloc[:,2] = df.iloc[:,2].apply(replace_empty_col_with_zeros)
+    df.iloc[:,3] = df.iloc[:,3].apply(replace_empty_col_with_zeros)
 
     # Save the modified DataFrame to the original CSV file
-    df.to_csv(csv_processed_directory, index=False, header=False)
+    df.to_csv(csv_processed_path, index=False, header=False)
 
     csv_data: StringIO
 
-    csv_path = csv_processed_directory
+    csv_path = csv_processed_path
     with open(csv_path, 'r') as f:
         csv_data = f.read()
 
