@@ -19,12 +19,12 @@ class TransactionsWindow:
     transaction_date_picker_id = 'transaction_date_range_picker'
     delete_button_id = 'delete_button' 
 
-    host : str
-    dbname : str
-    user : str
-    password : str
-    port : str
-    table_name : str
+    app_host : str
+    app_database_name : str
+    app_username : str
+    app_password : str
+    app_port : str
+    app_table_name : str
 
     def __init__(self):
         self.date = datetime.datetime.now()
@@ -36,12 +36,12 @@ class TransactionsWindow:
 
         config = configparser.ConfigParser()
         config.read('Configurations/database_config.ini')
-        self.host = config['app_connection']['app_hostname']
-        self.dbname = config['app_connection']['app_database']
-        self.user = config['app_connection']['app_username']
-        self.password = config['app_connection']['app_pwd']
-        self.port = config['app_connection']['app_port']
-        self.table_name = config['app_connection']['app_table']
+        self.app_host = config['app_connection']['app_hostname']
+        self.app_database_name = config['app_connection']['app_database']
+        self.app_username = config['app_connection']['app_username']
+        self.app_password = config['app_connection']['app_pwd']
+        self.app_port = config['app_connection']['app_port']
+        self.app_table_name = config['app_connection']['app_table']
 
     def get_num_days_in_month(self):
         days = 31
@@ -59,11 +59,11 @@ class TransactionsWindow:
         try:
 
             # Open a connection to the PostgreSQL database
-            conn = psycopg2.connect(host=self.host,
-                                    dbname=self.dbname,
-                                    user=self.user,
-                                    password=self.password,
-                                    port=self.port)
+            conn = psycopg2.connect(host=self.app_host,
+                                    dbname=self.app_database_name,
+                                    user=self.app_username,
+                                    password=self.app_password,
+                                    port=self.app_port)
 
             cur = conn.cursor()
 
@@ -90,11 +90,11 @@ class TransactionsWindow:
         try:
 
             # Open a connection to the PostgreSQL database
-            conn = psycopg2.connect(host=self.host,
-                                    dbname=self.dbname,
-                                    user=self.user,
-                                    password=self.password,
-                                    port=self.port)
+            conn = psycopg2.connect(host=self.app_host,
+                                    dbname=self.app_database_name,
+                                    user=self.app_username,
+                                    password=self.app_password,
+                                    port=self.app_port)
 
             cur = conn.cursor()
 
@@ -115,7 +115,7 @@ class TransactionsWindow:
 
     # make table of uploaded transactions matching the current month and year 
     def make_transaction_table(self):
-        select_script = f"SELECT * FROM {self.table_name} WHERE transaction_date::text LIKE %s"
+        select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text LIKE %s"
         params = (self.year_month_str + '%',)
         df = self.read_from_database(select_script, params)
         df = df.drop('id', axis=1)
@@ -217,23 +217,23 @@ class TransactionsWindow:
                                       float(row['balance'])
                                      )
 
-                            select_script = f"SELECT * FROM {self.table_name} WHERE transaction_date::text = %s AND to_or_from::text = %s AND withdrawl::float = %s AND deposit::float = %s AND balance::float = %s"
+                            select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text = %s AND to_or_from::text = %s AND withdrawl::float = %s AND deposit::float = %s AND balance::float = %s"
                             select_df = self.read_from_database(select_script, params)
 
                             # create a list of ids of the rows to delete and delete from database
                             ids = select_df['id'].tolist()
                             placeholders = ','.join(['%s'] * len(ids))
-                            delete_script = f"DELETE FROM {self.table_name} WHERE id IN ({placeholders})"
+                            delete_script = f"DELETE FROM {self.app_table_name} WHERE id IN ({placeholders})"
                             self.execute_on_database(delete_script, ids)
 
                             # Refresh the DataFrame after deletion
-                            select_script = f"SELECT * FROM {self.table_name}"
+                            select_script = f"SELECT * FROM {self.app_table_name}"
                             df = self.read_from_database(select_script, None)
 
             # Date range selection changed, filter table entries to match.
             elif triggered_id == self.transaction_date_picker_id:
                 params = (strftime(start_date), strftime(end_date))
-                select_script = f"SELECT * FROM {self.table_name} WHERE transaction_date BETWEEN %s AND %s"
+                select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date BETWEEN %s AND %s"
 
                 df = self.read_from_database(select_script, params)
                 df = df.drop('id', axis=1)
