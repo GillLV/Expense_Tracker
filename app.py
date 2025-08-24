@@ -3,7 +3,7 @@ from dash import Dash
 
 transaction_widget = TransactionsWindow()
 app = Dash(__name__)
-transaction_widget.make_components(app)
+transaction_widget.make_window_components(app)
 
 
 

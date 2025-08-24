@@ -153,7 +153,7 @@ class TransactionsWindow:
         return html.Button('remove', id=self.delete_button_id, n_clicks=0)
 
     # defines the layout using the defined components and handles callbacks
-    def make_components (self, app):
+    def make_window_components (self, app):
         app.layout = [html.Div(children=[ html.H1( children="Transaction History",
                                                     style={
                                                             'textAlign': 'center',
