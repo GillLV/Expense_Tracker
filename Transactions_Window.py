@@ -27,13 +27,17 @@ class TransactionsWindow:
     app_table_name : str
 
     def __init__(self):
+        self.init_dates()
+        self.init_connection()
+
+    def init_dates(self):
         self.date = datetime.datetime.now()
         self.month = self.date.month
         self.year = self.date.year
         self.day = self.get_num_days_in_month()
-
         self.year_month_str = f'{self.year}-{self.month:02d}'
 
+    def init_connection(self):
         config = configparser.ConfigParser()
         config.read('Configurations/database_config.ini')
         self.app_host = config['app_connection']['app_hostname']
