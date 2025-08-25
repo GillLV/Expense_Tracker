@@ -174,7 +174,7 @@ class TransactionsWindow:
             Output('transaction_table', 'style_data_conditional'), 
             Input('transaction_table', 'selected_rows')
         )
-        def update_selections(selected_rows):
+        def update_selected_rows_theming(selected_rows):
             if selected_rows:
                 return[
                         {
