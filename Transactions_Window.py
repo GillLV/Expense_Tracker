@@ -117,12 +117,17 @@ class TransactionsWindow:
                 print("Database connection closed.")
         return df
 
-    # make table of uploaded transactions matching the current month and year 
-    def make_transaction_table(self):
+    def get_df_of_current_month(self):
         select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text LIKE %s"
         params = (self.year_month_str + '%',)
         df = self.read_from_database(select_script, params)
         df = df.drop('id', axis=1)
+        return df
+
+    # make table of uploaded transactions matching the current month and year 
+    def make_transaction_table(self):
+
+        df = self.get_df_of_current_month()
 
         def get_column_type(col):
             type : str
