@@ -14,10 +14,11 @@ try:
         # Open the csv in pandas
         return pd.read_csv(csv_input_path, header=None)  
     
-    def save_df_to_csv(df):
+    def save_formated_csv():
+        df = get_formatted_df()
         config.read('Configurations/csv_config.ini')
         csv_processed_path = config['csv_files']['processed_path']
-        # Save the modified DataFrame to the original CSV file
+        # Save the modified DataFrame to a new CSV file
         df.to_csv(csv_processed_path, index=False, header=False)
 
     def get_csv_data():
@@ -28,17 +29,14 @@ try:
             csv_data = f.read()
         return StringIO(csv_data)
 
-    def get_formatted_df_from_csv():
+    def get_formatted_df():
         df = get_df_from_csv()
         df = format_columns(df)
         return df
 
-    def copy_csv_to_table():
-        df = get_formatted_df_from_csv()
-        save_df_to_csv(df)
-        csv_data = get_csv_data()
-        # Copy the csv file to our PostgreSQL table
-        cur.copy_from(csv_data, app_table_name, sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))   
+    def save_csv_file():
+        pass
+
 
     def is_US_format(split_list):
         if len(split_list) != 3:
@@ -80,6 +78,31 @@ try:
         df.iloc[:,3] = df.iloc[:,3].apply(replace_empty_col_with_zeros)
         return df
 
+    def make_temp_table(cur):
+        create_temp_table_script = f"CREATE TABLE IF NOT EXISTS temp_table (id SERIAL PRIMARY KEY," \
+                                                                     "transaction_date DATE," \
+                                                                     "to_or_from TEXT," \
+                                                                     "withdrawl NUMERIC(15, 2)," \
+                                                                     "deposit NUMERIC(15, 2)," \
+                                                                     "balance NUMERIC(15, 2));"
+
+        cur.execute(create_temp_table_script)
+
+    def copy_csv_to_temp(cur):
+        csv_data = get_csv_data()
+        cur.copy_from(csv_data, "temp_table", sep=',', columns=('transaction_date', 'to_or_from', 'withdrawl', 'deposit','balance'))
+
+    def copy_temp_to_transactions(cur):
+        insert_script = f"INSERT INTO {app_table_name} (transaction_date, to_or_from, withdrawl, deposit, balance) " \
+                    "SELECT transaction_date, to_or_from, withdrawl, deposit, balance " \
+                    "FROM temp_table " \
+                    "ON CONFLICT (transaction_date, to_or_from, withdrawl, deposit, balance) DO NOTHING "
+        cur.execute(insert_script)
+
+    def delete_temp(cur):
+        delete_temp_table_script = "DROP TABLE IF EXISTS temp_table;"
+        cur.execute(delete_temp_table_script)
+
     config.read('Configurations/database_config.ini')
 
     app_host_name = config['app_connection']['app_hostname']
@@ -97,7 +120,13 @@ try:
                             port=app_port)
 
     cur = conn.cursor()
-    copy_csv_to_table()
+    
+    save_formated_csv()
+    make_temp_table(cur)
+    copy_csv_to_temp(cur)
+    copy_temp_to_transactions(cur)
+    delete_temp(cur)
+
     conn.commit()
 
 # Catch errors and close connection

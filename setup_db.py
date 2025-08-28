@@ -82,9 +82,14 @@ if success:
                                                                      "to_or_from TEXT," \
                                                                      "withdrawl NUMERIC(15, 2)," \
                                                                      "deposit NUMERIC(15, 2)," \
-                                                                     "balance NUMERIC(15, 2));"
+                                                                     "balance NUMERIC(15, 2)," \
+                                                                     "UNIQUE (transaction_date, to_or_from, withdrawl, deposit, balance))"
         cur = conn.cursor()
         cur.execute(create_table_script)
+
+
+
+
         print(f"Table '{app_table_name}' created successfully.")
 
         conn.commit()
