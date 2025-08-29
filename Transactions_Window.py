@@ -160,6 +160,25 @@ class TransactionsWindow:
 
     def make_delete_button(self):
         return html.Button('remove', id=self.delete_button_id, n_clicks=0)
+    
+
+    def get_selected_rows_df(self, params):
+        select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text = %s AND to_or_from::text = %s AND withdrawl::float = %s AND deposit::float = %s AND balance::float = %s"
+        select_df = self.read_from_database(select_script, params)
+        return select_df
+
+    def delete_selected_rows(self, select_df):
+        # create a list of ids of the rows to delete and delete from database
+        # There should only be one single entry that matches the selected row, but check for all just in case
+        ids = select_df['id'].tolist()
+        placeholders = ','.join(['%s'] * len(ids))
+        delete_script = f"DELETE FROM {self.app_table_name} WHERE id IN ({placeholders})"
+        self.execute_on_database(delete_script, ids)
+
+    def get_all_rows_df(self):
+        select_script = f"SELECT * FROM {self.app_table_name}"
+        df = self.read_from_database(select_script, None)
+        return df
 
     # defines the layout using the defined components and handles callbacks
     def make_window_components (self, app):
@@ -226,18 +245,9 @@ class TransactionsWindow:
                                       float(row['balance'])
                                      )
 
-                            select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text = %s AND to_or_from::text = %s AND withdrawl::float = %s AND deposit::float = %s AND balance::float = %s"
-                            select_df = self.read_from_database(select_script, params)
-
-                            # create a list of ids of the rows to delete and delete from database
-                            ids = select_df['id'].tolist()
-                            placeholders = ','.join(['%s'] * len(ids))
-                            delete_script = f"DELETE FROM {self.app_table_name} WHERE id IN ({placeholders})"
-                            self.execute_on_database(delete_script, ids)
-
-                            # Refresh the DataFrame after deletion
-                            select_script = f"SELECT * FROM {self.app_table_name}"
-                            df = self.read_from_database(select_script, None)
+                            select_df = self.get_selected_rows_df(params)
+                            self.delete_selected_rows(select_df)
+                            df = self.get_all_rows_df()
 
             # Date range selection changed, filter table entries to match.
             elif triggered_id == self.transaction_date_picker_id:
