@@ -179,6 +179,13 @@ class TransactionsWindow:
         select_script = f"SELECT * FROM {self.app_table_name}"
         df = self.read_from_database(select_script, None)
         return df
+    
+    def get_selected_date_range_df(self, start_date, end_date):
+        params = (strftime(start_date), strftime(end_date))
+        select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date BETWEEN %s AND %s"
+        df = self.read_from_database(select_script, params)
+        df = df.drop('id', axis=1)
+        return df   
 
     # defines the layout using the defined components and handles callbacks
     def make_window_components (self, app):
@@ -251,10 +258,6 @@ class TransactionsWindow:
 
             # Date range selection changed, filter table entries to match.
             elif triggered_id == self.transaction_date_picker_id:
-                params = (strftime(start_date), strftime(end_date))
-                select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date BETWEEN %s AND %s"
-
-                df = self.read_from_database(select_script, params)
-                df = df.drop('id', axis=1)
+                df = self.get_selected_date_range_df(start_date, end_date)
 
             return df.to_dict('records')
