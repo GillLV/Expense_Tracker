@@ -160,12 +160,6 @@ class TransactionsWindow:
 
     def make_delete_button(self):
         return html.Button('remove', id=self.delete_button_id, n_clicks=0)
-    
-
-    def get_selected_rows_df(self, params):
-        select_script = f"SELECT * FROM {self.app_table_name} WHERE transaction_date::text = %s AND to_or_from::text = %s AND withdrawl::float = %s AND deposit::float = %s AND balance::float = %s"
-        select_df = self.read_from_database(select_script, params)
-        return select_df
 
     def delete_selected_rows(self, select_df):
         # create a list of ids of the rows to delete and delete from database
@@ -254,7 +248,7 @@ class TransactionsWindow:
 
                             select_df = self.get_selected_rows_df(params)
                             self.delete_selected_rows(select_df)
-                            df = self.get_all_rows_df()
+                            df = self.get_selected_date_range_df(start_date, end_date)
 
             # Date range selection changed, filter table entries to match.
             elif triggered_id == self.transaction_date_picker_id:
